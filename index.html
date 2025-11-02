@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Sprunky-style Incredibox Mod (Demo)</title>
+<style>
+  :root{
+    --bg:#0f1724;
+    --card:#0b1220;
+    --accent:#f97316;
+    --muted:#9aa6b2;
+    --slot:#09121a;
+    --glass: rgba(255,255,255,0.03);
+  }
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial}
+  body{background:linear-gradient(180deg,#071021 0%, #081827 60%); color:#e6eef6; display:flex;align-items:center;justify-content:center;padding:28px}
+  .app{width:100%;max-width:1100px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); border-radius:14px; box-shadow: 0 8px 30px rgba(2,6,23,0.6); padding:22px; display:grid; grid-template-columns: 360px 1fr; gap:20px}
+  .left{padding:18px; background:linear-gradient(180deg,var(--card), rgba(255,255,255,0.01)); border-radius:12px}
+  .title{display:flex;align-items:center;gap:12px}
+  .logo{width:64px;height:64px;border-radius:10px;background:linear-gradient(135deg,#ffb86b,#ff7a18);display:flex;align-items:center;justify-content:center;font-weight:700;color:#071021;font-size:22px;box-shadow:0 6px 18px rgba(255,125,10,0.12)}
+  h1{margin:0;font-size:18px}
+  p.desc{color:var(--muted);font-size:13px;margin-top:10px;line-height:1.35}
+  .controls{display:flex;gap:10px;margin-top:14px}
+  button{cursor:pointer;border:0;padding:10px 12px;border-radius:10px;background:var(--glass);color:var(--muted);font-weight:600}
+  button.primary{background:linear-gradient(90deg,#ff8b2b,#ff4f4f); color:white; box-shadow:0 6px 20px rgba(255,80,40,0.12)}
+  .tempo{margin-top:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .tempo input{accent-color:var(--accent)}
+  .characters{margin-top:18px;display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .char{background:#071428;border-radius:10px;padding:10px;display:flex;align-items:center;gap:10px;cursor:grab;user-select:none;border:1px solid rgba(255,255,255,0.02)}
+  .char .icon{width:44;height:44;border-radius:8px;background:linear-gradient(135deg,#ffd9b8,#ff9d5c);display:flex;align-items:center;justify-content:center;font-weight:700;color:#071021}
+  .char .meta{flex:1}
+  .char .meta b{display:block}
+  .right{padding:16px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02)); border-radius:12px; display:flex;flex-direction:column; gap:12px}
+  .stage{height:360px;background:linear-gradient(180deg,#071a2a,#071320);border-radius:12px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:12px}
+  .slots{display:flex;gap:10px;margin-top:auto}
+  .slot{width:92px;height:120px;background:var(--slot);border-radius:10px;border:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;position:relative}
+  .slot .top{width:64px;height:64;border-radius:8px;background:linear-gradient(180deg,#0d2a3a,#06303f);display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700}
+  .slot .label{font-size:12px;color:var(--muted)}
+  .slot.active{box-shadow:0 8px 26px rgba(15,88,120,0.12); border:1px solid rgba(255,255,255,0.06)}
+  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;color:var(--muted);font-size:13px}
+  .note{font-size:12px;color:var(--muted)}
+  .small{font-size:12px;color:var(--muted)}
+  .drag-hint{font-size:12px;color:var(--muted);margin-top:6px}
+  @media (max-width:900px){ .app{grid-template-columns:1fr; padding:14px} .left{order:2} .right{order:1}}
+</style>
+</head>
+<body>
+  <div class="app" id="app">
+    <div class="left">
+      <div class="title">
+        <div class="logo">SP</div>
+        <div>
+          <h1>Sprunky-ish Mix</h1>
+          <div class="small">Fan-style Incredibox mod — synth sounds, drag characters into slots</div>
+        </div>
+      </div>
+      <p class="desc">Drag any character into a slot on the right to add its loop. Sounds are generated in-browser (no downloads). Click <b>Start</b> to begin playback — first user interaction will unlock audio.</p>
+
+      <div class="controls">
+        <button id="startBtn" class="primary">Start</button>
+        <button id="stopBtn">Stop</button>
+        <button id="clearBtn">Clear</button>
+      </div>
+
+      <div class="tempo">
+        <label class="small">Tempo</label>
+        <input id="tempo" type="range" min="80" max="160" value="120" />
+        <div id="tempoVal" class="small">120 BPM</div>
+      </div>
+
+      <div class="characters" id="chars">
+        <!-- characters inserted by JS -->
+      </div>
+
+      <div class="drag-hint">Tip: drag a character to any slot. Click a slot to toggle its sound as well.</div>
+    </div>
+
+    <div class="right">
+      <div class="stage">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:12px;height:12px;border-radius:3px;background:var(--accent)"></div>
+          <div style="color:var(--muted);">Master Timeline</div>
+        </div>
+
+        <div style="width:100%;display:flex;justify-content:space-between;align-items:center;margin-top:6px;color:var(--muted);font-size:13px">
+          <div>Loop length: <span id="loopLen">16 beats</span></div>
+          <div>Active tracks: <span id="activeCount">0</span></div>
+        </div>
+
+        <div class="slots" id="slots">
+          <!-- slots created by JS -->
+        </div>
+
+      </div>
+
+      <div class="footer">
+        <div class="note">Built with Web Audio — original synthesized loops you can edit.</div>
+        <div class="note">Made for quick customization.</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/*
+  Sprunky-style Incredibox Mod (single-file)
+  - 7 slots
+  - Drag characters into slots to enable matching loops
+  - Loops are synthesized with Web Audio API and scheduled to stay in sync
+  - Author: ChatGPT (demo)
+*/
+
+const AUDIO_CONTEXT = window.AudioContext ? new AudioContext() : null;
+let tempo = 120; // BPM
+const beatsPerBar = 4;
+const bars = 4; // 4 bars loop -> 16 beats
+let loopBeats = beatsPerBar * bars;
+let loopDuration = (60/tempo) * loopBeats; // seconds
+
+// scheduler parameters
+const lookahead = 0.1; // seconds
+const scheduleAheadTime = 0.3; // seconds
+
+// character / track definitions
+const TRACKS = [
+  { id: 'kick',   name:'Kick',     color:'#ffb86b', pattern:[0,2,4,6,8,10,12,14], type:'drum' },
+  { id: 'hat',    name:'Hi-Hat',   color:'#ffd27f', pattern:[0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5,9.5,10.5,11.5,12.5,13.5,14.5,15.5], type:'hat' },
+  { id: 'snare',  name:'Snare',    color:'#ffd0b2', pattern:[4,12], type:'drum' },
+  { id: 'bass',   name:'Bass',     color:'#9fe3ff', pattern:[0,4,8,12], type:'synth' },
+  { id: 'chop',   name:'Chop',     color:'#bda0ff', pattern:[2,6,10,14], type:'pluck' },
+  { id: 'vox',    name:'Vox',      color:'#ff9db2', pattern:[0, 8], type:'vocal' },
+  { id: 'pad',    name:'Pad',      color:'#8effc1', pattern:[0], type:'pad' },
+];
+
+// runtime
+let isPlaying = false;
+let nextNoteTime = 0;
+let schedulerTimerID = null;
+const trackStates = TRACKS.map(t=>({assigned:false, playing:false, id:t.id, nodeRefs:[]}));
+
+// UI refs
+const charsDiv = document.getElementById('chars');
+const slotsDiv = document.getElementById('slots');
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const clearBtn = document.getElementById('clearBtn');
+const tempoInput = document.getElementById('tempo');
+const tempoVal = document.getElementById('tempoVal');
+const activeCountEl = document.getElementById('activeCount');
+const loopLenEl = document.getElementById('loopLen');
+
+// immediate UI build
+function buildUI(){
+  // characters list
+  TRACKS.forEach((t,i)=>{
+    const el = document.createElement('div');
+    el.className='char';
+    el.draggable = true;
+    el.dataset.track = i;
+    el.innerHTML = `<div class="icon" style="background:${t.color}">${t.name[0]}</div>
+                    <div class="meta"><b>${t.name}</b><span class="small">${t.type}</span></div>`;
+    el.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', String(i));
+    });
+    charsDiv.appendChild(el);
+  });
+
+  // slots
+  for(let i=0;i<7;i++){
+    const slot = document.createElement('div');
+    slot.className='slot';
+    slot.dataset.slot = i;
+    slot.innerHTML = `<div class="top"> </div><div class="label">slot ${i+1}</div>`;
+    // drag events
+    slot.addEventListener('dragover', e=>e.preventDefault());
+    slot.addEventListener('drop', e=>{
+      e.preventDefault();
+      const trackIndex = parseInt(e.dataTransfer.getData('text/plain'));
+      assignTrackToSlot(trackIndex, i);
+    });
+    // click toggle
+    slot.addEventListener('click', ()=>{
+      const assigned = slot.dataset.assigned;
+      if(assigned){
+        toggleSlot(parseInt(slot.dataset.slot), false);
+      } else {
+        // if empty, assign first unassigned track as default
+        const first = TRACKS.findIndex((_,idx)=>!trackStates[idx].assigned);
+        if(first>=0) assignTrackToSlot(first, i);
+      }
+    });
+    slotsDiv.appendChild(slot);
+  }
+
+  tempoInput.addEventListener('input', e=>{
+    tempo = parseInt(e.target.value);
+    tempoVal.textContent = tempo + ' BPM';
+    recomputeLoop();
+  });
+
+  startBtn.addEventListener('click', startMaster);
+  stopBtn.addEventListener('click', stopMaster);
+  clearBtn.addEventListener('click', clearSlots);
+
+  recomputeLoop();
+}
+buildUI();
+
+// functions to manage assignment
+function assignTrackToSlot(trackIndex, slotIndex){
+  // unassign any existing slot for that track
+  for(let i=0;i<7;i++){
+    const s = slotsDiv.children[i];
+    if(s.dataset.assigned == trackIndex) {
+      s.dataset.assigned = '';
+      s.querySelector('.top').textContent = '';
+      s.classList.remove('active');
+      trackStates[trackIndex].assigned = false;
+    }
+  }
+  // assign to new slot
+  const slot = slotsDiv.children[slotIndex];
+  slot.dataset.assigned = trackIndex;
+  slot.querySelector('.top').textContent = TRACKS[trackIndex].name[0];
+  slot.querySelector('.top').style.background = TRACKS[trackIndex].color;
+  slot.classList.add('active');
+  trackStates[trackIndex].assigned = true;
+  trackStates[trackIndex].slot = slotIndex;
+  // set playing true by default
+  toggleSlot(slotIndex, true);
+  updateActiveCount();
+}
+
+function toggleSlot(slotIndex, on){
+  const slot = slotsDiv.children[slotIndex];
+  const assigned = slot.dataset.assigned;
+  if(!assigned) return;
+  const idx = parseInt(assigned);
+  trackStates[idx].playing = (on === undefined) ? !trackStates[idx].playing : on;
+  if(trackStates[idx].playing) slot.classList.add('active');
+  else slot.classList.remove('active');
+  updateActiveCount();
+}
+
+// clear all assignments
+function clearSlots(){
+  for(let i=0;i<7;i++){
+    const slot = slotsDiv.children[i];
+    delete slot.dataset.assigned;
+    slot.querySelector('.top').textContent = '';
+    slot.classList.remove('active');
+  }
+  trackStates.forEach(ts=>{ts.assigned=false; ts.playing=false; ts.nodeRefs=[]; delete ts.slot;});
+  updateActiveCount();
+}
+
+// update counters
+function updateActiveCount(){
+  const count = trackStates.reduce((s,ts)=> s + (ts.playing?1:0), 0);
+  activeCountEl.textContent = count;
+}
+
+// audio scheduling & synth helpers
+function recomputeLoop(){
+  loopBeats = beatsPerBar * bars;
+  loopDuration = (60/tempo) * loopBeats;
+  loopLenEl.textContent = `${loopBeats} beats (${loopDuration.toFixed(2)}s)`;
+}
+
+// map beat index (0..15) to time (seconds offset in loop)
+function beatToTime(beatIndex){
+  return (60/tempo) * beatIndex;
+}
+
+// schedule engine
+function scheduler(){
+  while(nextNoteTime < AUDIO_CONTEXT.currentTime + scheduleAheadTime){
+    // schedule each assigned & playing track events that fall into [nextNoteTime, nextNoteTime + lookaheadWindow]
+    TRACKS.forEach((t, ti)=>{
+      const state = trackStates[ti];
+      if(!state.assigned || !state.playing) return;
+      // for each pattern beat, compute the absolute time(s) in upcoming window
+      t.pattern.forEach(beat => {
+        // pattern may include fractional beats like 0.5
+        // compute next occurrence of this beat >= current
+        // find loop cycle that places beat time >= lastLastTime
+        // convert beat to seconds offset
+        const beatSec = beatToTime(beat);
+        // find the next occurrence time for this beat that falls after currentTime - small epsilon
+        const cycleOffset = Math.floor((AUDIO_CONTEXT.currentTime - beatSec) / loopDuration);
+        let occurrence = beatSec + (cycleOffset+1)*loopDuration;
+        // also check one earlier possibility
+        if(occurrence - loopDuration >= AUDIO_CONTEXT.currentTime) occurrence -= loopDuration;
+        // schedule occurrence if within window
+        if(occurrence >= nextNoteTime && occurrence < nextNoteTime + lookahead){
+          triggerEvent(t, ti, occurrence);
+        }
+      });
+    });
+    nextNoteTime += lookahead;
+  }
+}
+
+function triggerEvent(trackDef, trackIndex, when){
+  // create a short sound at specified time depending on track type
+  const type = trackDef.type;
+  const ctx = AUDIO_CONTEXT;
+  if(!ctx) return;
+  // keep references so nodes don't GC before they finish (helps stopping them if needed)
+  const refs = trackStates[trackIndex].nodeRefs;
+
+  if(type === 'drum'){
+    // quick kick using oscillator + gain envelope
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(100, when);
+    g.gain.setValueAtTime(0, when);
+    g.gain.exponentialRampToValueAtTime(1.0, when + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + 0.25);
+    o.connect(g);
+    // add slight distortion (waveshaper) optional
+    g.connect(ctx.destination);
+    o.start(when);
+    o.stop(when + 0.26);
+    refs.push(o);
+    setTimeout(()=>{ // cleanup after it's done
+      const idx = refs.indexOf(o); if(idx>=0) refs.splice(idx,1);
+    }, (when - ctx.currentTime + 0.3)*1000 + 50);
+  } else if(type === 'hat'){
+    // hi-hat using filtered noise
+    const bufferSize = 2 * ctx.sampleRate;
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for(let i=0;i<bufferSize;i++) data[i] = (Math.random()*2-1)*0.5;
+    const src = ctx.createBufferSource();
+    src.buffer = noiseBuffer;
+    src.loop = false;
+    const bq = ctx.createBiquadFilter();
+    bq.type = 'highpass'; bq.frequency.setValueAtTime(7000, when);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(0.6, when + 0.001);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + 0.08);
+    src.connect(bq); bq.connect(g); g.connect(ctx.destination);
+    src.start(when);
+    src.stop(when + 0.09);
+    refs.push(src);
+    setTimeout(()=>{ const idx=refs.indexOf(src); if(idx>=0) refs.splice(idx,1);}, (when - ctx.currentTime + 0.12)*1000 + 50);
+  } else if(type === 'synth'){
+    // bass note: short sawtooth with filter
+    const o = ctx.createOscillator();
+    o.type = 'sawtooth';
+    const g = ctx.createGain();
+    const f = ctx.createBiquadFilter();
+    f.type='lowpass'; f.frequency.setValueAtTime(400, when);
+    o.frequency.setValueAtTime(55, when);
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(0.8, when+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, when+0.4);
+    o.connect(f); f.connect(g); g.connect(ctx.destination);
+    o.start(when); o.stop(when+0.45);
+    refs.push(o);
+    setTimeout(()=>{ const idx=refs.indexOf(o); if(idx>=0) refs.splice(idx,1);}, (when - ctx.currentTime + 0.5)*1000 + 50);
+  } else if(type === 'pluck'){
+    // pluck using short envelope
+    const o = ctx.createOscillator();
+    o.type = 'triangle';
+    const g = ctx.createGain();
+    o.frequency.setValueAtTime(220, when);
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(0.9, when+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, when+0.3);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(when); o.stop(when+0.32);
+    refs.push(o);
+    setTimeout(()=>{ const idx=refs.indexOf(o); if(idx>=0) refs.splice(idx,1);}, (when - ctx.currentTime + 0.36)*1000 + 50);
+  } else if(type === 'vocal'){
+    // short vocal-ish chirp using FM
+    const car = ctx.createOscillator();
+    const mod = ctx.createOscillator();
+    const modGain = ctx.createGain();
+    mod.frequency.setValueAtTime(120, when);
+    mod.type='sine';
+    car.frequency.setValueAtTime(420, when);
+    modGain.gain.setValueAtTime(100, when);
+    mod.connect(modGain);
+    modGain.connect(car.frequency);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(0.9, when+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, when+0.35);
+    car.connect(g); g.connect(ctx.destination);
+    mod.start(when); car.start(when);
+    car.stop(when+0.4); mod.stop(when+0.4);
+    refs.push(car);
+    refs.push(mod);
+    setTimeout(()=>{ refs.splice(0,2); }, (when - ctx.currentTime + 0.45)*1000 + 50);
+  } else if(type === 'pad'){
+    // long soft pad note that sustains for the loop start moment
+    const o = ctx.createOscillator();
+    o.type = 'sine';
+    const g = ctx.createGain();
+    const f = ctx.createBiquadFilter();
+    f.type = 'lowpass'; f.frequency.setValueAtTime(1200, when);
+    o.frequency.setValueAtTime(220, when);
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(0.6, when+0.1);
+    g.gain.exponentialRampToValueAtTime(0.0001, when+loopDuration*0.9);
+    o.connect(f); f.connect(g); g.connect(ctx.destination);
+    o.start(when);
+    // stop after loopDuration to keep CPU low
+    o.stop(when + Math.min(loopDuration, 12));
+    refs.push(o);
+    setTimeout(()=>{ const idx=refs.indexOf(o); if(idx>=0) refs.splice(idx,1);}, (when - ctx.currentTime + Math.min(loopDuration,12) + 0.1)*1000 + 50);
+  }
+}
+
+// master start/stop
+function startMaster(){
+  if(!AUDIO_CONTEXT) { alert('Web Audio not supported.'); return; }
+  // resume context on user gesture
+  if(AUDIO_CONTEXT.state === 'suspended') AUDIO_CONTEXT.resume();
+  if(isPlaying) return;
+  isPlaying = true;
+  nextNoteTime = AUDIO_CONTEXT.currentTime;
+  // schedule first chunk immediately
+  schedulerTimerID = setInterval(() => {
+    scheduler();
+  }, lookahead*1000);
+}
+
+function stopMaster(){
+  if(!isPlaying) return;
+  isPlaying = false;
+  clearInterval(schedulerTimerID);
+  schedulerTimerID = null;
+  // cleanup any pending nodes
+  trackStates.forEach(ts=>{
+    if(ts.nodeRefs && ts.nodeRefs.length){
+      ts.nodeRefs.forEach(n=>{
+        try{ if(n.stop) n.stop(); }catch(e){}
+      });
+      ts.nodeRefs.length = 0;
+    }
+  });
+}
+
+// small helper to toggle assigned track playing by slot index
+function toggleSlot(slotIndex, state){
+  const slot = slotsDiv.children[slotIndex];
+  const assigned = slot.dataset.assigned;
+  if(!assigned) return;
+  const idx = parseInt(assigned);
+  trackStates[idx].playing = state;
+  if(state) slot.classList.add('active'); else slot.classList.remove('active');
+  updateActiveCount();
+}
+
+// on load, attach slot click toggles (toggle play/stop for that assigned track)
+for(let i=0;i<7;i++){
+  slotsDiv.children[i].addEventListener('dblclick', ()=> {
+    const slot = slotsDiv.children[i];
+    const assigned = slot.dataset.assigned;
+    if(!assigned) return;
+    const idx = parseInt(assigned);
+    trackStates[idx].playing = !trackStates[idx].playing;
+    if(trackStates[idx].playing) slot.classList.add('active'); else slot.classList.remove('active');
+    updateActiveCount();
+  });
+}
+
+// ensure we update active count on UI changes
+updateActiveCount();
+
+// Accessibility: provide a keyboard start
+document.addEventListener('keydown', (e)=>{
+  if(e.key === ' '){
+    e.preventDefault();
+    if(isPlaying) stopMaster(); else startMaster();
+  }
+});
+
+</script>
+</body>
+</html>
