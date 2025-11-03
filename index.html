@@ -1,165 +1,583 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sprunky Horror — Full Version</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sprunky Horror — Extra Horror Mode (Demo)</title>
 <style>
-/* General Styles */
-body,html{margin:0;padding:0;background:#0b0b0e;font-family:sans-serif;color:#eee;overflow-x:hidden;}
-.wrap{display:grid;grid-template-columns:400px 1fr;gap:12px;max-width:1400px;margin:20px auto;}
-.panel{background:linear-gradient(180deg,#111,#0a0a0f);border-radius:12px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,0.7);}
-.left{display:flex;flex-direction:column;}
-.right{display:flex;flex-direction:column;}
-h1{margin:0;font-size:22px;}
-.sub{color:#888;font-size:13px;margin-bottom:8px;}
-button{padding:8px 12px;border-radius:10px;border:none;background:rgba(255,255,255,0.05);color:#ccc;cursor:pointer;font-weight:600;}
-button.primary{background:linear-gradient(90deg,#ff6b8a,#ff364f);color:#fff;box-shadow:0 6px 20px rgba(255,80,40,0.15);}
-input[type=range]{width:100%;margin:6px 0;}
-.chars{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;overflow-y:auto;max-height:550px;}
-.char{display:flex;gap:6px;align-items:center;padding:6px;border-radius:10px;background:rgba(255,255,255,0.02);cursor:pointer;border:1px solid rgba(255,255,255,0.02);}
-.avatar{width:60px;height:60px;border-radius:12px;background:#222;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;transition:transform .4s,box-shadow .4s;}
-.avatar-active{transform:translateY(-4px) scale(1.05);box-shadow:0 6px 18px rgba(255,90,143,0.3);animation:beatPulse 0.8s infinite;}
-@keyframes beatPulse{0%{transform:translateY(-4px) scale(1.02);}50%{transform:translateY(-4px) scale(1.08);}100%{transform:translateY(-4px) scale(1.02);}}
-.stage{flex:1;border-radius:12px;background:linear-gradient(180deg,#071322,#031018);padding:12px;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.03);}
-.slots{display:flex;gap:8px;justify-content:center;margin-top:12px;}
-.slot{width:100px;height:140px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(0,0,0,0.02));display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:6px;border:1px dashed rgba(255,255,255,0.03);transition:transform .18s;}
-.slot.active{box-shadow:0 10px 40px rgba(255,90,143,0.25);transform:translateY(-4px);}
-.slotTop{width:60px;height:60px;border-radius:10px;background:#081d25;display:flex;align-items:center;justify-content:center;color:#ccc;font-weight:700;margin-top:4px;}
-.effectsLayer{pointer-events:none;position:absolute;inset:0;z-index:10;}
-.ghost{position:absolute;inset:0;background:radial-gradient(circle at 50% 20%, rgba(255,255,255,0.02), transparent 15%);mix-blend-mode:screen;opacity:0;transition:opacity .6s;}
-.ghost.on{opacity:1;}
-.shake{animation:shake 0.5s;}
-@keyframes shake{0%{transform:translateX(0);}25%{transform:translateX(-6px);}50%{transform:translateX(5px);}75%{transform:translateX(-3px);}100%{transform:translateX(0);}}
-.meter{font-size:13px;color:#888;margin-left:auto;}
-.comboList{margin-top:10px;color:#888;font-size:13px;}
-@media(max-width:980px){.wrap{grid-template-columns:1fr;gap:8px;}.left{order:2;}.right{order:1;}}
+  :root{
+    --bg:#07070a;
+    --panel:#0f1720;
+    --muted:#9aa6b2;
+    --accent:#ff5a8f;
+    --glow: rgba(255,90,143,0.18);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;background:linear-gradient(180deg,#05060a,#081018);color:#e8eef6}
+  .wrap{max-width:1100px;margin:24px auto;padding:18px;display:grid;grid-template-columns:360px 1fr;gap:18px}
+  .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02)); border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+  .left{min-height:520px}
+  h1{margin:0;font-size:20px}
+  .sub{color:var(--muted);font-size:13px;margin-top:6px}
+  .controls{display:flex;gap:8px;margin-top:12px}
+  button{padding:10px 12px;border-radius:10px;border:0;background:rgba(255,255,255,0.03);color:var(--muted);cursor:pointer;font-weight:600}
+  button.primary{background:linear-gradient(90deg,#ff8b2b,#ff4f4f);color:#fff;box-shadow:0 8px 24px rgba(255,80,40,0.12)}
+  label.small{font-size:13px;color:var(--muted);display:block;margin-top:12px}
+  .chars{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+  .char{
+    display:flex;gap:10px;align-items:center;padding:8px;border-radius:10px;background:rgba(255,255,255,0.02);cursor:grab;border:1px solid rgba(255,255,255,0.02)
+  }
+  .avatar{width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#071a20;box-shadow:0 6px 18px rgba(0,0,0,0.25)}
+  .meta b{display:block}
+  .meta span{color:var(--muted);font-size:13px}
+  .right{min-height:520px;display:flex;flex-direction:column;gap:12px}
+  .stage{height:420px;border-radius:10px;background:
+    radial-gradient(circle at 10% 20%, rgba(255,80,120,0.03), transparent 6%),
+    linear-gradient(180deg,#071322,#031018); padding:18px;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.02)}
+  .slots{display:flex;gap:12px;justify-content:center;margin-top:16px}
+  .slot{width:90px;height:130px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(0,0,0,0.02));display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px;border:1px dashed rgba(255,255,255,0.03);position:relative;transition:transform .18s}
+  .slot .slotTop{width:64px;height:64;border-radius:8px;background:#081d25;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700}
+  .slot.active{box-shadow:0 10px 40px var(--glow);border:1px solid rgba(255,90,143,0.18);transform:translateY(-6px)}
+  .stageTitle{display:flex;align-items:center;gap:10px}
+  .meter{font-size:13px;color:var(--muted);margin-left:auto}
+  .effectsLayer{pointer-events:none;position:absolute;inset:0;z-index:10}
+  .ghost{position:absolute;inset:0;background:radial-gradient(circle at 50% 20%, rgba(255,255,255,0.02), transparent 10%), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><text x="10" y="50" fill="%23ffffff" opacity="0.02" font-size="80">ghost</text></svg>');mix-blend-mode:screen;opacity:0;transition:opacity .6s}
+  .ghost.on{opacity:1}
+  .shake{animation:shake 0.5s}
+  @keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-8px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}100%{transform:translateX(0)}}
+  .hud{display:flex;gap:10px;align-items:center;margin-top:12px}
+  .comboList{margin-top:10px;color:var(--muted);font-size:13px}
+  /* character active animation when playing */
+  .avatar-idle{transition:transform .4s,filter .4s}
+  .avatar-active{transform:translateY(-6px) scale(1.06);filter:drop-shadow(0 10px 30px rgba(255,90,143,0.12));animation:beatPulse 0.8s infinite}
+  @keyframes beatPulse{0%{transform:translateY(-6px) scale(1.02)}50%{transform:translateY(-6px) scale(1.06)}100%{transform:translateY(-6px) scale(1.02)}}
+
+  /* small responsiveness */
+  @media (max-width:980px){.wrap{grid-template-columns:1fr; padding:12px}.left{order:2}.right{order:1}}
 </style>
 </head>
 <body>
-<div class="wrap">
-<div class="panel left">
-<h1>Sprunky Horror — Full Version</h1>
-<div class="sub">Click or drag/drop sounds onto characters. Combos trigger special horror effects.</div>
-<div class="controls">
-<button id="startBtn" class="primary">Start Audio</button>
-<button id="stopBtn">Stop</button>
-<button id="clearBtn">Clear All</button>
-</div>
-<label class="small">Tempo <span id="tempoRead">120 BPM</span></label>
-<input id="tempo" type="range" min="80" max="160" value="120">
-<div class="chars" id="charsArea"></div>
-<div class="comboList" id="comboList"><b>Combos:</b> Try C1+C2+C5 for flash; C3+C4+C6 for ghost overlay; C7+C8 for whisper surge.</div>
-</div>
+  <div class="wrap">
+    <div class="panel left">
+      <h1>Sprunky Horror — Extra Horror Mode</h1>
+      <div class="sub">Spooky Sprunky-style demo. Drag a character into a slot to enable its loop. Combos trigger extra effects.</div>
 
-<div class="panel right">
-<div class="stage" id="stage">
-<div style="display:flex;align-items:center;gap:10px;">
-<div style="padding:4px 8px;background:linear-gradient(90deg,#0b2530,#06202b);border-radius:6px;">Stage</div>
-<div class="meter" id="activeCount">Active: 0</div>
-</div>
-<div class="slots" id="slotsArea"></div>
-<div class="effectsLayer">
-<div id="ghostOverlay" class="ghost"></div>
-<canvas id="flashCanvas" style="position:absolute;inset:0;pointer-events:none;"></canvas>
-</div>
-</div>
-</div>
-</div>
+      <div class="controls">
+        <button id="startBtn" class="primary">Start (Unlock Audio)</button>
+        <button id="stopBtn">Stop</button>
+        <button id="clearBtn">Clear</button>
+      </div>
+
+      <label class="small">Tempo <span id="tempoRead" style="margin-left:8px;color:var(--muted)">120 BPM</span></label>
+      <input id="tempo" type="range" min="80" max="160" value="120" style="width:100%;margin-top:8px">
+
+      <div class="chars" id="charsArea" aria-label="characters list"></div>
+
+      <div class="comboList" id="comboList"><b>Combos:</b> Try Kick+Bass+Vox for Flash; Hat+Chop+Pad for Ghost; Snare+Vox for Whisper Surge</div>
+
+    </div>
+
+    <div class="panel right">
+      <div class="stage" id="stage">
+        <div class="stageTitle">
+          <div style="padding:6px 10px;background:linear-gradient(90deg,#0b2530,#06202b);border-radius:8px">Stage</div>
+          <div class="meter" id="activeCount">Active: 0</div>
+        </div>
+
+        <div class="slots" id="slotsArea"></div>
+
+        <div class="effectsLayer">
+          <div id="ghostOverlay" class="ghost"></div>
+          <canvas id="flashCanvas" style="position:absolute;inset:0;pointer-events:none"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
-/* --- Audio Context --- */
-let ctx=null,tempo=120;
-const charsArea=document.getElementById('charsArea');
-const slotsArea=document.getElementById('slotsArea');
-const activeCountEl=document.getElementById('activeCount');
-const ghostOverlay=document.getElementById('ghostOverlay');
-const flashCanvas=document.getElementById('flashCanvas');
-const flashCtx=flashCanvas.getContext('2d');
+/*
+  Sprunky Horror — Extra Horror Mode (single-file)
+  - 7 tracks, drag-drop to 7 slots
+  - Synthesized samples using Web Audio API (kick, hat, snare, bass, chop, vox whisper-like, pad)
+  - Combo detection for special effects: flash, ghost overlay, screen shake, whisper surge
+  - Safe: no copyrighted Sprunky/Incredibox audio included. See comments for how to replace with your own samples.
+*/
 
-function ensureAudio(){if(!ctx) ctx=new (window.AudioContext||window.webkitAudioContext)(); if(ctx.state==='suspended') ctx.resume();}
-function resizeCanvas(){flashCanvas.width=flashCanvas.clientWidth;flashCanvas.height=flashCanvas.clientHeight;}
-window.addEventListener('resize',resizeCanvas);resizeCanvas();
+/////////////////// Audio Setup ///////////////////
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let ctx = null;
+let tempo = 120;
+const beatsPerBar = 4;
+const bars = 4; // 16-beat loop
+let loopBeats = beatsPerBar * bars;
+let loopDuration = (60/tempo)*loopBeats;
 
-/* --- Track / Sound Definitions --- */
-const TRACKS=['drum','hat','snare','bass','pluck','vox','pad'];
-const charCount=10;
-let charActive=new Array(charCount).fill(false);
-let charNodes=Array.from({length:charCount},()=>[]);
+const lookahead = 0.05; // scheduler tick (s)
+const scheduleAhead = 0.25;
 
-/* --- Build Character UI --- */
+let isPlaying = false;
+let nextTickTime = 0;
+let schedulerTimer = null;
+
+function ensureAudio(){
+  if(!ctx) ctx = new AudioCtx();
+  if(ctx.state === 'suspended') ctx.resume();
+}
+
+function recomputeLoop(){
+  loopBeats = beatsPerBar * bars;
+  loopDuration = (60/tempo) * loopBeats;
+  document.getElementById('tempoRead').textContent = tempo + ' BPM';
+}
+
+/////////////////// Track Definitions ///////////////////
+const TRACKS = [
+  { id:'kick', name:'Kick', type:'drum' },
+  { id:'hat', name:'Hi-Hat', type:'drum' },
+  { id:'snare', name:'Snare', type:'drum' },
+  { id:'bass', name:'Bass', type:'synth' },
+  { id:'chop', name:'Chop', type:'pluck' },
+  { id:'vox', name:'Vox', type:'whisper' }, // whisper-like layer
+  { id:'pad', name:'Pad', type:'pad' }
+];
+
+// sample patterns (beat indices from 0..15, fractions allowed)
+TRACKS[0].pattern = [0,4,8,12]; // kick
+TRACKS[1].pattern = [0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5,9.5,10.5,11.5,12.5,13.5,14.5,15.5]; // hats
+TRACKS[2].pattern = [4,12]; // snare
+TRACKS[3].pattern = [0,4,8,12]; // bass long
+TRACKS[4].pattern = [2,6,10,14]; // chop pluck
+TRACKS[5].pattern = [0, 8]; // whisper hits (can be layered)
+TRACKS[6].pattern = [0]; // pad sustains starting at loop start
+
+// runtime state
+const trackState = TRACKS.map(t => ({assigned:false, playing:false, slot:null, nodeRefs:[]}));
+
+/////////////////// UI Setup ///////////////////
+const charsArea = document.getElementById('charsArea');
+const slotsArea = document.getElementById('slotsArea');
+const activeCountEl = document.getElementById('activeCount');
+const ghostOverlay = document.getElementById('ghostOverlay');
+const flashCanvas = document.getElementById('flashCanvas');
+const flashCtx = flashCanvas.getContext && flashCanvas.getContext('2d');
+
+function resizeCanvas(){ flashCanvas.width = flashCanvas.clientWidth; flashCanvas.height = flashCanvas.clientHeight; }
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
 function buildUI(){
-  const gradients=['linear-gradient(135deg,#ffb3b3,#ff5a8f)','linear-gradient(135deg,#baffc9,#4be87a)','linear-gradient(135deg,#b9d2ff,#4a8eff)',
-  'linear-gradient(135deg,#f5b6ff,#e25cff)','linear-gradient(135deg,#9ff0ff,#3ad2d2)','linear-gradient(135deg,#ffe6a8,#ffb54f)',
-  'linear-gradient(135deg,#d6ffb3,#77ff3a)','linear-gradient(135deg,#ff8cf0,#ff3abc)','linear-gradient(135deg,#ffb37c,#ff573f)','linear-gradient(135deg,#b3fffb,#3affd2)'];
-  
-  for(let i=0;i<charCount;i++){
-    const charDiv=document.createElement('div');charDiv.className='char';charDiv.dataset.index=i;
-    const avatar=document.createElement('div');avatar.className='avatar';avatar.style.background=gradients[i];avatar.textContent='C'+(i+1);
-    charDiv.appendChild(avatar);
-    charDiv.addEventListener('click',()=>toggleChar(i));
-    charsArea.appendChild(charDiv);
-    
-    const slot=document.createElement('div');slot.className='slot';slot.dataset.index=i;
-    const top=document.createElement('div');top.className='slotTop';top.textContent='Empty';
-    slot.appendChild(top);slotsArea.appendChild(slot);
+  // characters
+  TRACKS.forEach((t,i)=>{
+    const el = document.createElement('div'); el.className='char'; el.draggable=true; el.dataset.idx=i;
+    const avatar = document.createElement('div'); avatar.className='avatar avatar-idle'; avatar.style.width='56px'; avatar.style.height='56px';
+    // design spooky avatars via CSS gradients and tiny SVG-like backgrounds for variety
+    const grad = [
+      'linear-gradient(135deg,#ffb3b3,#ff5a8f)',
+      'linear-gradient(135deg,#baffc9,#4be87a)',
+      'linear-gradient(135deg,#b9d2ff,#4a8eff)',
+      'linear-gradient(135deg,#f5b6ff,#e25cff)',
+      'linear-gradient(135deg,#9ff0ff,#3ad2d2)',
+      'linear-gradient(135deg,#ffd9b8,#ff8b4f)',
+      'linear-gradient(135deg,#bde0c6,#79a882)'
+    ][i%7];
+    avatar.style.background = grad; avatar.style.borderRadius='10px'; avatar.style.display='flex'; avatar.style.alignItems='center'; avatar.style.justifyContent='center';
+    avatar.style.fontWeight='800'; avatar.style.color='#041a1e'; avatar.textContent = t.name[0];
+
+    const meta = document.createElement('div'); meta.className='meta';
+    const b = document.createElement('b'); b.textContent = t.name;
+    const s = document.createElement('span'); s.textContent = t.type;
+    meta.appendChild(b); meta.appendChild(s);
+
+    el.appendChild(avatar); el.appendChild(meta);
+    charsArea.appendChild(el);
+
+    // drag behavior
+    el.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', i); });
+  });
+
+  // slots
+  for(let i=0;i<7;i++){
+    const s = document.createElement('div'); s.className='slot'; s.dataset.slot=i;
+    s.innerHTML = `<div class="slotTop" style="margin-top:6px"></div><div style="margin-top:auto;color:var(--muted);font-size:13px">slot ${i+1}</div>`;
+    slotsArea.appendChild(s);
+
+    s.addEventListener('dragover', e => e.preventDefault());
+    s.addEventListener('drop', e => {
+      e.preventDefault();
+      const trackIdx = parseInt(e.dataTransfer.getData('text/plain'));
+      assignTrackToSlot(trackIdx, i);
+    });
+
+    s.addEventListener('click', ()=>{ // toggle play for assigned track
+      const assigned = s.dataset.assigned;
+      if(!assigned) return;
+      const idx = parseInt(assigned);
+      trackState[idx].playing = !trackState[idx].playing;
+      updateSlotVisuals();
+      updateActiveCount();
+    });
   }
 }
 buildUI();
 
-/* --- Character Activation --- */
-function toggleChar(idx){
-  charActive[idx]=!charActive[idx];
-  updateUI();
-  if(charActive[idx]) playChar(idx); else stopChar(idx);
+function updateActiveCount(){
+  const count = trackState.reduce((sum,ts)=> sum + (ts.playing?1:0), 0);
+  activeCountEl.textContent = 'Active: ' + count;
+}
+function updateSlotVisuals(){
+  for(let i=0;i<7;i++){
+    const slot = slotsArea.children[i];
+    const assigned = slot.dataset.assigned;
+    if(assigned !== undefined && assigned !== '') {
+      slot.querySelector('.slotTop').textContent = TRACKS[assigned].name[0];
+      slot.classList.toggle('active', trackState[assigned].playing);
+    } else {
+      slot.querySelector('.slotTop').textContent = '';
+      slot.classList.remove('active');
+    }
+  }
 }
 
-function updateUI(){
-  document.querySelectorAll('.char .avatar').forEach((a,i)=>{if(charActive[i]) a.classList.add('avatar-active'); else a.classList.remove('avatar-active');});
-  let activeCount=charActive.filter(b=>b).length;
-  activeCountEl.textContent='Active: '+activeCount;
-  
-  // Combos
-  if(charActive[0]&&charActive[1]&&charActive[4]) triggerFlash();
-  if(charActive[2]&&charActive[3]&&charActive[5]) triggerGhost();
-  if(charActive[6]&&charActive[7]) triggerWhisper();
+/////////////////// Assignment ///////////////////
+function assignTrackToSlot(trackIndex, slotIndex){
+  // unassign any previous slot from trackIndex
+  for(let i=0;i<7;i++){
+    const s = slotsArea.children[i];
+    if(s.dataset.assigned == String(trackIndex)){
+      delete s.dataset.assigned;
+    }
+  }
+  const slot = slotsArea.children[slotIndex];
+  slot.dataset.assigned = trackIndex;
+  trackState[trackIndex].assigned = true;
+  trackState[trackIndex].slot = slotIndex;
+  trackState[trackIndex].playing = true;
+  // animate avatar in chars area to active
+  const charEl = charsArea.children[trackIndex];
+  const avatar = charEl.querySelector('.avatar');
+  avatar.classList.remove('avatar-idle'); avatar.classList.add('avatar-active');
+
+  updateSlotVisuals();
+  updateActiveCount();
+  // quick visual combo indicator (call combos check)
+  checkCombos();
 }
 
-/* --- Play / Stop Sounds --- */
-function playChar(idx){
+function clearAll(){
+  for(let i=0;i<7;i++){
+    const slot = slotsArea.children[i];
+    delete slot.dataset.assigned;
+  }
+  trackState.forEach((ts, idx)=>{ ts.assigned=false; ts.playing=false; ts.slot=null; ts.nodeRefs=[]; const avatar = charsArea.children[idx].querySelector('.avatar'); avatar.classList.remove('avatar-active'); avatar.classList.add('avatar-idle')});
+  updateSlotVisuals(); updateActiveCount();
+  stopMaster();
+}
+
+/////////////////// Scheduler & Synth Engines ///////////////////
+
+// simple scheduler to keep events aligned to grid
+function scheduler(){
+  if(!isPlaying) return;
+  while(nextTickTime < ctx.currentTime + scheduleAhead){
+    // schedule ticks across patterns
+    TRACKS.forEach((t,ti)=>{
+      const state = trackState[ti];
+      if(!state.assigned || !state.playing) return;
+      // for each pattern beat value, compute upcoming occurrences near nextTickTime window
+      t.pattern.forEach(beat => {
+        // convert beat to seconds offset inside loop
+        const beatSec = (60/tempo) * beat;
+        // find the next occurrence >= (nextTickTime - small)
+        // compute cycle count
+        const sinceStart = ctx.currentTime % loopDuration;
+        // compute absolute time of next loop start (approx)
+        // simpler approach: schedule occurrences within [nextTickTime, nextTickTime + lookahead]
+        // iterate across possible occurrences (only need check current cycle and next)
+        for(let cycle=0;cycle<2;cycle++){
+          const base = Math.floor((nextTickTime - beatSec)/loopDuration) + cycle;
+          const occ = beatSec + base * loopDuration;
+          if(occ >= nextTickTime - 0.001 && occ < nextTickTime + lookahead + 0.001){
+            triggerSound(t, ti, occ);
+          }
+        }
+      });
+    });
+    nextTickTime += lookahead;
+  }
+}
+
+// trigger sound based on type at specific time
+function triggerSound(trackDef, trackIndex, when){
+  if(!ctx) return;
+  const type = trackDef.type;
+  const refs = trackState[trackIndex].nodeRefs;
+
+  if(type === 'drum'){
+    // quick kick/snare/hat via simple oscillator + noise
+    if(trackDef.id === 'kick' || trackDef.id === 'snare'){
+      const o = ctx.createOscillator(); const g = ctx.createGain();
+      o.type = (trackDef.id==='kick')?'sine':'square';
+      o.frequency.setValueAtTime(trackDef.id==='kick'?80:180, when);
+      g.gain.setValueAtTime(0.0001, when);
+      g.gain.exponentialRampToValueAtTime(1.0, when+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, when+0.25);
+      o.connect(g); g.connect(masterOut());
+      o.start(when); o.stop(when+0.26);
+      refs.push(o);
+      setTimeout(()=>{ const i = refs.indexOf(o); if(i>=0) refs.splice(i,1); }, (when - ctx.currentTime + 0.4)*1000);
+    } else if(trackDef.id === 'hat'){
+      // filtered noise hat
+      const bufferSize = Math.floor(ctx.sampleRate * 0.06);
+      const noiseBuf = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = noiseBuf.getChannelData(0);
+      for(let i=0;i<bufferSize;i++) data[i] = (Math.random()*2-1)*0.5;
+      const src = ctx.createBufferSource(); src.buffer = noiseBuf;
+      const fil = ctx.createBiquadFilter(); fil.type='highpass'; fil.frequency.setValueAtTime(7000, when);
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, when);
+      g.gain.linearRampToValueAtTime(0.6, when+0.001);
+      g.gain.exponentialRampToValueAtTime(0.0001, when+0.08);
+      src.connect(fil); fil.connect(g); g.connect(masterOut());
+      src.start(when); src.stop(when+0.09);
+      refs.push(src);
+      setTimeout(()=>{ const i = refs.indexOf(src); if(i>=0) refs.splice(i,1); }, (when - ctx.currentTime + 0.2)*1000);
+    }
+  } else if(type === 'synth'){
+    // bassy synth
+    const o = ctx.createOscillator(); const g = ctx.createGain(); const f = ctx.createBiquadFilter();
+    o.type = 'sawtooth';
+    // alternating notes for variety
+    const freq = (trackDef.id==='bass') ? 55 : 110;
+    o.frequency.setValueAtTime(freq, when);
+    f.type='lowpass'; f.frequency.setValueAtTime(600, when);
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(0.8, when+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, when+0.5);
+    o.connect(f); f.connect(g); g.connect(masterOut());
+    o.start(when); o.stop(when+0.56);
+    refs.push(o);
+    setTimeout(()=>{ const i = refs.indexOf(o); if(i>=0) refs.splice(i,1); }, (when - ctx.currentTime + 0.7)*1000);
+  } else if(type === 'pluck'){
+    // pluck
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.type='triangle'; o.frequency.setValueAtTime(220, when);
+    g.gain.setValueAtTime(0.0001, when); g.gain.linearRampToValueAtTime(0.9, when+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, when+0.32);
+    o.connect(g); g.connect(masterOut());
+    o.start(when); o.stop(when+0.36);
+    refs.push(o);
+    setTimeout(()=>{ const i=refs.indexOf(o); if(i>=0) refs.splice(i,1); }, (when - ctx.currentTime + 0.5)*1000);
+  } else if(type === 'whisper'){
+    // whisper-like texture: AM noise + random bandpass + slow pitch modulation for eerie quality
+    const duration = 1.1;
+    // noise buffer
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const noiseBuf = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = noiseBuf.getChannelData(0);
+    for(let i=0;i<bufferSize;i++){
+      // taper amplitude for whispery grains
+      const env = 1 - Math.pow(i/bufferSize,1.8);
+      data[i] = (Math.random()*2-1) * 0.25 * env;
+    }
+    const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = false;
+    const band = ctx.createBiquadFilter(); band.type='bandpass';
+    // center frequency random-ish to vary character
+    band.frequency.setValueAtTime(1200 + Math.random()*1600, when);
+    band.Q.setValueAtTime(1.8 + Math.random()*2.2, when);
+    const amp = ctx.createGain(); amp.gain.setValueAtTime(0.0001, when);
+    amp.gain.linearRampToValueAtTime(0.6, when+0.02);
+    amp.gain.exponentialRampToValueAtTime(0.0001, when+duration-0.02);
+    // subtle LFO on band center for extra whisper motion
+    const lfo = ctx.createOscillator(); const lfoGain = ctx.createGain();
+    lfo.frequency.setValueAtTime(0.8 + Math.random()*0.6, when);
+    lfoGain.gain.setValueAtTime(120 + Math.random()*220, when);
+    lfo.connect(lfoGain); lfoGain.connect(band.frequency);
+    src.connect(band); band.connect(amp); amp.connect(masterOut());
+    lfo.start(when); src.start(when); src.stop(when+duration); lfo.stop(when+duration);
+    refs.push(src); refs.push(lfo);
+    setTimeout(()=>{ // cleanup
+      const i1 = trackState[trackIndex].nodeRefs.indexOf(src); if(i1>=0) trackState[trackIndex].nodeRefs.splice(i1,1);
+    }, (when - ctx.currentTime + duration + 0.2)*1000);
+  } else if(type === 'pad'){
+    // long pad sustain; schedule only at loop start
+    const o = ctx.createOscillator(); const g = ctx.createGain(); const f = ctx.createBiquadFilter();
+    o.type='sine'; o.frequency.setValueAtTime(220, when);
+    f.type='lowpass'; f.frequency.setValueAtTime(1200, when);
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(0.7, when+0.12);
+    g.gain.exponentialRampToValueAtTime(0.0001, when+Math.min(loopDuration, 14));
+    o.connect(f); f.connect(g); g.connect(masterOut());
+    o.start(when); o.stop(when + Math.min(loopDuration,14));
+    refs.push(o);
+    setTimeout(()=>{ const i=refs.indexOf(o); if(i>=0) refs.splice(i,1); }, (when - ctx.currentTime + Math.min(loopDuration,14) + 0.4)*1000);
+  }
+}
+
+// master output with global fx
+let masterGainNode = null;
+function masterOut(){
+  if(!ctx) return null;
+  if(!masterGainNode){
+    masterGainNode = ctx.createGain();
+    masterGainNode.gain.setValueAtTime(0.9, ctx.currentTime);
+    // small reverb/convolver could be added, but keep simple
+    masterGainNode.connect(ctx.destination);
+  }
+  return masterGainNode;
+}
+
+/////////////////// Scheduler control ///////////////////
+function startMaster(){
   ensureAudio();
-  TRACKS.forEach(type=>{
-    const buffer=generateAudioBuffer(type);
-    const src=ctx.createBufferSource();
-    src.buffer=buffer; src.loop=true; src.connect(ctx.destination); src.start();
-    charNodes[idx].push(src);
+  if(isPlaying) return;
+  isPlaying = true;
+  nextTickTime = ctx.currentTime;
+  schedulerTimer = setInterval(scheduler, Math.max(20, lookahead*1000));
+}
+function stopMaster(){
+  if(!isPlaying) return;
+  isPlaying = false;
+  clearInterval(schedulerTimer); schedulerTimer = null;
+  // stop outstanding nodes
+  trackState.forEach(ts => {
+    if(ts.nodeRefs){
+      ts.nodeRefs.forEach(n => {
+        try{ if(n.stop) n.stop(); } catch(e){}
+      });
+      ts.nodeRefs.length = 0;
+    }
   });
 }
 
-function stopChar(idx){
-  charNodes[idx].forEach(n=>n.stop()); charNodes[idx]=[];
+/////////////////// Combo System & Visual Effects ///////////////////
+
+// combos
+const COMBOS = [
+  { id:'flash', tracks: ['kick','bass','vox'], on: ()=>doFlash(), desc:'Kick + Bass + Vox → Screen Flash' },
+  { id:'ghost', tracks: ['hat','chop','pad'], on: ()=>doGhost(), desc:'Hat + Chop + Pad → Ghost Overlay' },
+  { id:'whisperSurge', tracks: ['snare','vox'], on: ()=>doWhisperSurge(), desc:'Snare + Vox → Whisper Surge' },
+  { id:'shake', tracks: ['bass','chop','hat'], on: ()=>doShake(), desc:'Bass + Chop + Hat → Screen Shake' }
+];
+
+function checkCombos(){
+  // compute set of currently active track ids
+  const activeIds = TRACKS.filter((t,idx) => trackState[idx].assigned && trackState[idx].playing).map(t=>t.id);
+  COMBOS.forEach(c => {
+    const present = c.tracks.every(tr => activeIds.includes(tr));
+    if(present){
+      // fire effect
+      c.on();
+    }
+  });
+  // update combo list UI (optional)
+  const comboList = document.getElementById('comboList');
+  comboList.innerHTML = '<b>Combos:</b> ' + COMBOS.map(c=>c.desc).join(' • ');
 }
 
-/* --- Effects --- */
-function triggerGhost(){ghostOverlay.classList.add('on');setTimeout(()=>ghostOverlay.classList.remove('on'),1200);}
-function triggerFlash(){flashCtx.fillStyle='rgba(255,255,255,0.4)';flashCtx.fillRect(0,0,flashCanvas.width,flashCanvas.height);setTimeout(()=>flashCtx.clearRect(0,0,flashCanvas.width,flashCanvas.height),150);}
-function triggerWhisper(){console.log('Whisper surge triggered!');}
-
-/* --- Simple Audio Generator --- */
-function generateAudioBuffer(type){
-  const sr=44100,dur=0.5,numSamples=sr*dur; const buffer=ctx.createBuffer(1,numSamples,sr);
-  const data=buffer.getChannelData(0);
-  let freq=220;
-  if(type==='drum') freq=60; else if(type==='hat') freq=4000; else if(type==='snare') freq=180; else if(type==='bass') freq=110; else if(type==='pluck') freq=300; else if(type==='vox') freq=500; else if(type==='pad') freq=200;
-  for(let i=0;i<numSamples;i++){data[i]=Math.sin(2*Math.PI*freq*i/sr)*0.3;}
-  return buffer;
+function doFlash(){
+  // quick white flash by painting canvas
+  if(!flashCtx) return;
+  flashCtx.clearRect(0,0,flashCanvas.width, flashCanvas.height);
+  flashCtx.fillStyle = 'rgba(255,255,255,0.92)';
+  flashCtx.fillRect(0,0,flashCanvas.width, flashCanvas.height);
+  // fade out
+  let alpha = 0.92;
+  const fade = setInterval(()=>{
+    alpha *= 0.65;
+    flashCtx.clearRect(0,0,flashCanvas.width, flashCanvas.height);
+    flashCtx.fillStyle = 'rgba(255,255,255,'+alpha+')';
+    flashCtx.fillRect(0,0,flashCanvas.width, flashCanvas.height);
+    if(alpha < 0.02){ clearInterval(fade); flashCtx.clearRect(0,0,flashCanvas.width, flashCanvas.height); }
+  }, 60);
+  // small pitch warp effect: increase masterGain quickly (perceptual thump)
+  if(masterGainNode) {
+    const now = ctx.currentTime;
+    masterGainNode.gain.cancelScheduledValues(now);
+    masterGainNode.gain.setValueAtTime(1.0, now);
+    masterGainNode.gain.linearRampToValueAtTime(1.3, now+0.02);
+    masterGainNode.gain.exponentialRampToValueAtTime(0.9, now+0.25);
+  }
 }
 
-/* --- Event Listeners --- */
-document.getElementById('startBtn').addEventListener('click',()=>{ensureAudio();});
-document.getElementById('stopBtn').addEventListener('click',()=>{charActive.fill(false);updateUI(); charNodes.forEach((n,i)=>stopChar(i));});
-document.getElementById('clearBtn').addEventListener('click',()=>{charActive.fill(false);updateUI(); charNodes.forEach((n,i)=>stopChar(i));});
-document.getElementById('tempo').addEventListener('input',e=>{tempo=parseInt(e.target.value);document.getElementById('tempoRead').textContent=tempo+' BPM';});
+function doGhost(){
+  // reveal ghost overlay for a while
+  ghostOverlay.classList.add('on');
+  setTimeout(()=>ghostOverlay.classList.remove('on'), 2000);
+  // also layer soft reverb-like pad boost (by creating a slow swell)
+  if(!ctx) return;
+  const g = masterGainNode || ctx.createGain();
+  if(!masterGainNode) { g.connect(ctx.destination); masterGainNode = g; }
+  const now = ctx.currentTime;
+  masterGainNode.gain.cancelScheduledValues(now);
+  masterGainNode.gain.setValueAtTime(masterGainNode.gain.value || 0.9, now);
+  masterGainNode.gain.linearRampToValueAtTime(1.05, now+0.8);
+  masterGainNode.gain.exponentialRampToValueAtTime(0.9, now+2.4);
+}
+
+function doWhisperSurge(){
+  // schedule additional whisper nodes layered on top quickly
+  TRACKS.forEach((t, idx)=>{
+    if(t.id === 'vox'){
+      // trigger extra whisper-like events immediately for 3 cycles
+      for(let i=0;i<3;i++){
+        triggerSound(t, idx, ctx.currentTime + i*0.12);
+      }
+    }
+  });
+  // visual subtle vignette via ghost overlay
+  ghostOverlay.classList.add('on');
+  setTimeout(()=>ghostOverlay.classList.remove('on'), 900);
+}
+
+function doShake(){
+  const stage = document.getElementById('stage');
+  stage.classList.add('shake');
+  setTimeout(()=>stage.classList.remove('shake'), 650);
+}
+
+/////////////////// Controls wiring ///////////////////
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  ensureAudio(); startMaster();
+});
+document.getElementById('stopBtn').addEventListener('click', ()=>{ stopMaster(); });
+document.getElementById('clearBtn').addEventListener('click', ()=>{ clearAll(); });
+
+document.getElementById('tempo').addEventListener('input', e=>{
+  tempo = parseInt(e.target.value); recomputeLoop();
+});
+
+// ensure combos checked periodically in case multiple activations happen
+setInterval(()=>checkCombos(), 200);
+
+/////////////////// Replace synthesized sounds with your own samples (instructions) ///////////////////
+/*
+  If you have legal rights to the original Sprunky sounds (or your own WAV/MP3s), replace triggerSound() logic:
+  - Preload your audio into AudioBuffer objects with fetch/arrayBuffer/decodeAudioData (or embed base64 and decode).
+  - At schedule time, create an AudioBufferSourceNode, set buffer, connect to masterOut(), set start(when), and optionally set loop=true.
+  - Keep loop alignment by setting start times that respect the loop grid (same scheduler).
+  Example (pseudo):
+
+    // preload: buffers['kick'] = decodedAudioBuffer;
+    const src = ctx.createBufferSource();
+    src.buffer = buffers['kick']; src.loop = false;
+    const g = ctx.createGain(); g.gain.setValueAtTime(1, when);
+    src.connect(g); g.connect(masterOut());
+    src.start(when);
+
+  Note: Do NOT upload or share copyrighted audio unless you have permission / ownership.
+*/
+
+/////////////////// Initialization ///////////////////
+recomputeLoop();
+
+// Small accessibility: allow space to toggle playing
+document.addEventListener('keydown', e=>{
+  if(e.code === 'Space'){ e.preventDefault(); if(isPlaying) stopMaster(); else { ensureAudio(); startMaster(); } }
+});
+
+// ensure everything visible and good
+updateSlotVisuals();
+updateActiveCount();
+
 </script>
 </body>
 </html>
